@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "981155291009",
+    "project_id": "iot-manage-energy",
+    "storage_bucket": "iot-manage-energy.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981155291009:android:c7a0c2c39ffe2090305280",
+        "android_client_info": {
+          "package_name": "com.example.charging_station_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGE9p2J9dUXJDjOsufNmPOOJYVFKoEKc0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
