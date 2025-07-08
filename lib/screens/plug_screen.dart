@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../providers/mqtt_provider.dart';
 import '../providers/charging_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/history_provider.dart';
 
 class PlugScreen extends StatefulWidget {
   final int plugNumber;
@@ -439,8 +440,27 @@ class _PlugScreenState extends State<PlugScreen> {
     );
   }
 
-  void _toggleDevice(MqttProvider mqttProvider) {
+  void _toggleDevice(MqttProvider mqttProvider) async {
     final command = _isDeviceOn ? 'off' : 'on';
+    // Nếu đang bật và chuẩn bị tắt thì lưu lịch sử
+    if (_isDeviceOn && command == 'off' && _deviceData != null) {
+      final chargingProvider =
+          Provider.of<ChargingProvider>(context, listen: false);
+      final historyProvider =
+          Provider.of<HistoryProvider>(context, listen: false);
+      final energy = (_deviceData!['energy'] ?? 0.0).toDouble();
+      final power = (_deviceData!['power'] ?? 0.0).toDouble();
+      final time = (_deviceData!['time'] ?? 0).toInt();
+      final price = chargingProvider.calculatePrice(energy);
+      final timeStr = chargingProvider.formatTime(time);
+      await historyProvider.addHistoryItem(
+        plugNumber: widget.plugNumber.toString(),
+        timeuse: '$timeStr',
+        energy: '${energy.toStringAsFixed(3)} kWh',
+        power: '${power.toStringAsFixed(1)} W',
+        price: '$price VND',
+      );
+    }
     mqttProvider.publishCommand(command, plugNumber: widget.plugNumber);
 
     ScaffoldMessenger.of(context).showSnackBar(

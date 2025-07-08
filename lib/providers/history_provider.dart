@@ -198,4 +198,58 @@ class HistoryProvider extends ChangeNotifier {
     final minutes = totalMinutes % 60;
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
   }
+
+  // Thêm lịch sử mới vào Firebase
+  Future<void> addHistoryItem({
+    required String plugNumber,
+    required String timeuse,
+    required String energy,
+    required String power,
+    required String price,
+  }) async {
+    final uid = await _getCurrentUID();
+    if (uid == null) {
+      debugPrint('❌ Không tìm thấy UID, không thể lưu lịch sử!');
+      return;
+    }
+    final DatabaseReference historyRef =
+        _database.child('Users').child(uid).child('datahistory');
+
+    // Lấy key mới (tăng dần)
+    int newKey = 1;
+    final snapshot = await historyRef.orderByKey().limitToLast(1).get();
+    if (snapshot.exists) {
+      for (final child in snapshot.children) {
+        try {
+          newKey = int.parse(child.key ?? '0') + 1;
+        } catch (e) {
+          debugPrint('Lỗi khi chuyển đổi key: $e');
+        }
+      }
+    }
+
+    // Lấy thời gian hiện tại
+    final now = DateTime.now();
+    final timestamp =
+        '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} '
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+
+    // Tạo map dữ liệu
+    final data = {
+      'plugNumber': plugNumber,
+      'timestamp': timestamp,
+      'timeuse': timeuse,
+      'energy': energy,
+      'power': power,
+      'price': price,
+    };
+
+    await historyRef.child(newKey.toString()).set(data).then((_) {
+      debugPrint('✅ Đã lưu lịch sử sạc! Plug $plugNumber');
+      // Sau khi lưu có thể fetch lại lịch sử nếu muốn
+      // await fetchHistoryData();
+    }).catchError((e) {
+      debugPrint('❌ Lỗi khi lưu lịch sử: $e');
+    });
+  }
 }
